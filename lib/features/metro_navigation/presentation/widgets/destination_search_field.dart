@@ -33,10 +33,11 @@ class DestinationSearchField extends StatelessWidget {
           onSubmitted: onSubmitted,
           decoration: InputDecoration(
             hintText: 'e.g. Cairo University, Abbas El Akkad...',
-            prefixIcon: InkWell(
-              onTap: onTap,
-              child: const Icon(
-                  Icons.search_rounded, color: AppColors.gold, size: 20
+            prefixIcon: IconButton(
+              onPressed: onTap,
+              icon: const Icon(
+                  Icons.search_rounded,
+                  color: AppColors.gold, size: 20
               ),
             ),
           ),
