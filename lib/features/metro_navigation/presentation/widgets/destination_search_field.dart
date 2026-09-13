@@ -34,6 +34,7 @@ class DestinationSearchField extends StatelessWidget {
           decoration: InputDecoration(
             hintText: 'e.g. Cairo University, Abbas El Akkad...',
             prefixIcon: IconButton(
+              tooltip: 'Search',
               onPressed: onTap,
               icon: const Icon(
                   Icons.search_rounded,

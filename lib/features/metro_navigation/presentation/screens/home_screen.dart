@@ -1,6 +1,4 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
 import 'package:metro_ui/features/metro_navigation/domain/entities/trip_result.dart';
 import 'package:metro_ui/features/metro_navigation/domain/services/metro_network.dart';
 import 'package:metro_ui/features/metro_navigation/domain/services/trip_planner.dart';
@@ -30,25 +28,22 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  String? _start;
-  String? _end;
-  TripResult? _result;
-  bool _searched = false;
+  final _start = RxnString();
+  final _end = RxnString();
+  final Rx<TripResult?> _result = Rx<TripResult?>(null);
+  final _searched = false.obs;
 
   void _swap() {
-    setState(() {
-      final tmp = _start;
-      _start = _end;
-      _end = tmp;
-    });
+    final tmp = _start.value;
+    _start.value = _end.value;
+    _end.value = tmp;
   }
 
   void _calculate() {
-    if (_start == null || _end == null) return;
-    setState(() {
-      _searched = true;
-      _result = widget.planner.plan(_start!, _end!);
-    });
+    if (_start.value == null || _end.value == null) return;
+
+    _searched.value = true;
+    _result.value = widget.planner.plan(_start.value!, _end.value!);
   }
 
   @override
@@ -63,19 +58,15 @@ class _HomeScreenState extends State<HomeScreen> {
             onPressed: () => Navigator.of(context).push(
               MaterialPageRoute(builder: (_) => const AllStationsScreen()),
             ),
-          ),
+          )
         ],
       ),
       body: SafeArea(
         child: ListView(
-          padding: const EdgeInsets.only(bottom: 32),
+          padding: const EdgeInsets.only(bottom: 30),
           children: [
             MetroAppHeader(
-              lines: const [
-                MetroLineId.line1,
-                MetroLineId.line2,
-                MetroLineId.line3,
-              ],
+              lines: const [MetroLineId.line1, MetroLineId.line2, MetroLineId.line3],
             ),
             const SizedBox(height: 10),
             Padding(
@@ -91,21 +82,13 @@ class _HomeScreenState extends State<HomeScreen> {
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     NearestStationLocator(
-                      onTap: () {
-                        //Radwa Elsayed///////////////////////////////////////////////////////////////////////////////////////////////
-                      },
-                    ),
-                    SizedBox(height: 15),
-                    StationPickerField(
-                      onTap: () {
-                         if (_start != null)
-                          openStationMap(_start!);
-                        else {
-                          Get.snackbar(
-                            'Choose Station',
-                            'please choose a start station first',
-                          );
+                        onTap: (){
+                          //Radwa Elsayed///////////////////////////////////////////////////////////////////////////////////////////////
                         }
+                    ),
+                    SizedBox(height: 15,),
+                    StationPickerField(
+                      onTap: (){
                         //Nada Yahia/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
                       },
                       label: 'From station',
@@ -114,18 +97,10 @@ class _HomeScreenState extends State<HomeScreen> {
                       selectedStation: _start,
                       onSelected: (s) => setState(() => _start = s),
                     ),
-                    SizedBox(height: 15),
+                    SizedBox(height: 15,),
                     SwapStationsButton(onPressed: _swap),
                     StationPickerField(
-                      onTap: () {
-                        if (_end != null)
-                          openStationMap(_end!);
-                        else {
-                          Get.snackbar(
-                            'Choose Station',
-                            'please choose a start station first',
-                          );
-                        }
+                      onTap: (){
                         //Nada Yahia/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
                       },
                       label: 'To station',
@@ -136,9 +111,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     ),
                     const SizedBox(height: 14),
                     ElevatedButton.icon(
-                      onPressed: (_start != null && _end != null)
-                          ? _calculate
-                          : null,
+                      onPressed: (_start != null && _end != null) ? _calculate : null,
                       icon: const Icon(Icons.tram_rounded, size: 18),
                       label: const Text('Calculate trip'),
                     ),
@@ -175,13 +148,13 @@ class _HomeScreenState extends State<HomeScreen> {
                   child: _result == null
                       ? const NoRouteMessage()
                       : Column(
-                          crossAxisAlignment: CrossAxisAlignment.stretch,
-                          children: [
-                            TripStatsRow(result: _result!),
-                            DirectionBanner(result: _result!),
-                            RouteTimeline(result: _result!),
-                          ],
-                        ),
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      TripStatsRow(result: _result!),
+                      DirectionBanner(result: _result!),
+                      RouteTimeline(result: _result!),
+                    ],
+                  ),
                 ),
               ),
           ],
