@@ -59,6 +59,7 @@ class _StationPickerFieldState extends State<StationPickerField> {
           menuHeight: 250,
           leadingIcon: IconButton(
             onPressed: widget.onTap,
+            tooltip: 'Go to Map',
             icon: const Icon(Icons.location_on_outlined,
                 color: AppColors.gold, size: 20),
           ),

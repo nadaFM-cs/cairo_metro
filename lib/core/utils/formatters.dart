@@ -21,6 +21,6 @@ class Formatters {
   static String priceEgp(double value) {
     final isWhole = value == value.roundToDouble();
     final text = isWhole ? value.toStringAsFixed(0) : value.toStringAsFixed(2);
-    return '$text pound';
+    return '$text EGP';
   }
 }
