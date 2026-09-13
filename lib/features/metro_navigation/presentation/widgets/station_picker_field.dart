@@ -57,9 +57,9 @@ class _StationPickerFieldState extends State<StationPickerField> {
           requestFocusOnTap: true,
           hintText: widget.hint,
           menuHeight: 250,
-          leadingIcon: InkWell(
-            onTap: widget.onTap,
-            child: const Icon(Icons.location_on_outlined,
+          leadingIcon: IconButton(
+            onPressed: widget.onTap,
+            icon: const Icon(Icons.location_on_outlined,
                 color: AppColors.gold, size: 20),
           ),
           textStyle: AppTextStyles.stationName,
