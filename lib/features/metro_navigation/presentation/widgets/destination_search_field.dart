@@ -7,9 +7,11 @@ class DestinationSearchField extends StatelessWidget {
   final VoidCallback onTap;
   final ValueChanged<String>? onChanged;
   final ValueChanged<String>? onSubmitted;
+  final TextEditingController? controller;
 
   const DestinationSearchField({
     super.key,
+    this.controller,
     this.onChanged,
     this.onSubmitted,
     required this.onTap,
@@ -28,6 +30,7 @@ class DestinationSearchField extends StatelessWidget {
         ),
         const SizedBox(height: 8),
         TextField(
+          controller: controller,
           style: AppTextStyles.body,
           onChanged: onChanged,
           onSubmitted: onSubmitted,

@@ -1,12 +1,18 @@
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
+import 'package:url_launcher/url_launcher.dart';
+
 import 'package:metro_ui/features/metro_navigation/domain/entities/trip_result.dart';
 import 'package:metro_ui/features/metro_navigation/domain/services/metro_network.dart';
 import 'package:metro_ui/features/metro_navigation/domain/services/trip_planner.dart';
 import 'package:metro_ui/features/metro_navigation/presentation/screens/station_map.dart';
 import 'package:metro_ui/features/metro_navigation/presentation/widgets/destination_search_field.dart';
 import 'package:metro_ui/features/metro_navigation/presentation/widgets/nearest_station_locator.dart';
+
 import '../../../../core/theme/app_colors.dart';
 import '../../domain/entities/metro_line_id.dart';
+import '../../domain/services/destination_search_service.dart';
+import '../../domain/services/nearest_station_service.dart';
 import '../utils/station_directory.dart';
 import '../widgets/direction_banner.dart';
 import '../widgets/metro_app_header.dart';
@@ -21,7 +27,11 @@ class HomeScreen extends StatefulWidget {
   final MetroNetwork network;
   final TripPlanner planner;
 
-  const HomeScreen({super.key, required this.network, required this.planner});
+  const HomeScreen({
+    super.key,
+    required this.network,
+    required this.planner,
+  });
 
   @override
   State<HomeScreen> createState() => _HomeScreenState();
@@ -33,6 +43,17 @@ class _HomeScreenState extends State<HomeScreen> {
   final Rx<TripResult?> _result = Rx<TripResult?>(null);
   final _searched = false.obs;
 
+  late final TextEditingController _destinationController;
+
+  final DestinationSearchService _destinationSearchService =
+      DestinationSearchService();
+
+  @override
+  void initState() {
+    super.initState();
+    _destinationController = TextEditingController();
+  }
+
   void _swap() {
     final tmp = _start.value;
     _start.value = _end.value;
@@ -43,7 +64,64 @@ class _HomeScreenState extends State<HomeScreen> {
     if (_start.value == null || _end.value == null) return;
 
     _searched.value = true;
-    _result.value = widget.planner.plan(_start.value!, _end.value!);
+    _result.value = widget.planner.plan(
+      _start.value!,
+      _end.value!,
+    );
+  }
+
+  Future<void> _searchDestination() async {
+    final query = _destinationController.text.trim();
+
+    if (query.isEmpty) {
+      Get.snackbar(
+        'Empty',
+        'Please enter a destination name',
+      );
+      return;
+    }
+
+    try {
+      final location =
+          await _destinationSearchService.searchDestination(query);
+
+      if (location == null) {
+        Get.snackbar(
+          'Not found',
+          'We could not find this destination.',
+        );
+        return;
+      }
+
+      final nearestStation = NearestStationService().findNearestStation(
+        latitude: location.latitude,
+        longitude: location.longitude,
+      );
+
+      _end.value = nearestStation.name;
+
+      Get.snackbar(
+        'Nearest station',
+        '${nearestStation.name} is the nearest station.',
+      );
+
+      final googleMapsUrl = Uri.parse(
+        'https://www.google.com/maps/search/?api=1'
+        '&query=${Uri.encodeComponent('${nearestStation.name} Cairo Metro Station')}',
+      );
+
+      if (await canLaunchUrl(googleMapsUrl)) {
+        await launchUrl(
+          googleMapsUrl,
+          mode: LaunchMode.externalApplication,
+        );
+      }
+    } catch (e) {
+      Get.snackbar(
+        'Search Failed',
+        'Could not find this destination. Try a more specific name.',
+      );
+    }
   }
 
   @override
@@ -56,9 +134,11 @@ class _HomeScreenState extends State<HomeScreen> {
             icon: const Icon(Icons.list_alt_rounded),
             tooltip: 'All stations',
             onPressed: () => Navigator.of(context).push(
-              MaterialPageRoute(builder: (_) => const AllStationsScreen()),
+              MaterialPageRoute(
+                builder: (_) => const AllStationsScreen(),
+              ),
             ),
-          )
+          ),
         ],
       ),
       body: SafeArea(
@@ -66,9 +146,14 @@ class _HomeScreenState extends State<HomeScreen> {
           padding: const EdgeInsets.only(bottom: 30),
           children: [
             MetroAppHeader(
-              lines: const [MetroLineId.line1, MetroLineId.line2, MetroLineId.line3],
+              lines: const [
+                MetroLineId.line1,
+                MetroLineId.line2,
+                MetroLineId.line3,
+              ],
             ),
             const SizedBox(height: 10),
+
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20),
               child: Container(
@@ -76,50 +161,75 @@ class _HomeScreenState extends State<HomeScreen> {
                 decoration: BoxDecoration(
                   color: AppColors.surface,
                   borderRadius: BorderRadius.circular(20),
-                  border: Border.all(color: AppColors.stroke),
+                  border: Border.all(
+                    color: AppColors.stroke,
+                  ),
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     NearestStationLocator(
-                        onTap: (){
-                          //Radwa Elsayed///////////////////////////////////////////////////////////////////////////////////////////////
-                        }
-                    ),
-                    SizedBox(height: 15,),
-                    StationPickerField(
-                      onTap: (){
-                        //Nada Yahia/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+                      onTap: () {
+                        // Radwa Elsayed
                       },
-                      label: 'From station',
-                      hint: 'Choose a start station',
-                      allStations: StationDirectory.all,
-                      selectedStation: _start,
-                      onSelected: (s) => setState(() => _start = s),
                     ),
-                    SizedBox(height: 15,),
-                    SwapStationsButton(onPressed: _swap),
-                    StationPickerField(
-                      onTap: (){
-                        //Nada Yahia/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-                      },
-                      label: 'To station',
-                      hint: 'Choose a destination station',
-                      allStations: StationDirectory.all,
-                      selectedStation: _end,
-                      onSelected: (s) => setState(() => _end = s),
+
+                    const SizedBox(height: 15),
+
+                    Obx(
+                      () => StationPickerField(
+                        onTap: () {
+                          // Nada Yahia
+                        },
+                        label: 'From station',
+                        hint: 'Choose a start station',
+                        allStations: StationDirectory.all,
+                        selectedStation: _start.value,
+                        onSelected: (s) => _start.value = s,
+                      ),
                     ),
+
+                    const SizedBox(height: 15),
+
+                    SwapStationsButton(
+                      onPressed: _swap,
+                    ),
+
+                    Obx(
+                      () => StationPickerField(
+                        onTap: () {
+                          // Nada Yahia
+                        },
+                        label: 'To station',
+                        hint: 'Choose a destination station',
+                        allStations: StationDirectory.all,
+                        selectedStation: _end.value,
+                        onSelected: (s) => _end.value = s,
+                      ),
+                    ),
+
                     const SizedBox(height: 14),
-                    ElevatedButton.icon(
-                      onPressed: (_start != null && _end != null) ? _calculate : null,
-                      icon: const Icon(Icons.tram_rounded, size: 18),
-                      label: const Text('Calculate trip'),
+
+                    Obx(
+                      () => ElevatedButton.icon(
+                        onPressed:
+                            (_start.value != null && _end.value != null)
+                                ? _calculate
+                                : null,
+                        icon: const Icon(
+                          Icons.tram_rounded,
+                          size: 18,
+                        ),
+                        label: const Text('Calculate trip'),
+                      ),
                     ),
                   ],
                 ),
               ),
             ),
-            SizedBox(height: 15),
+
+            const SizedBox(height: 15),
+
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20),
               child: Container(
@@ -127,36 +237,55 @@ class _HomeScreenState extends State<HomeScreen> {
                 decoration: BoxDecoration(
                   color: AppColors.surface,
                   borderRadius: BorderRadius.circular(20),
-                  border: Border.all(color: AppColors.stroke),
+                  border: Border.all(
+                    color: AppColors.stroke,
+                  ),
                 ),
                 child: Column(
                   children: [
                     DestinationSearchField(
-                      onTap: () {
-                        //Aya Hany/////////////////////////////////////////////////////////////////////////////////////////////////////
+                      controller: _destinationController,
+                      onSubmitted: (_) {
+                        _searchDestination();
                       },
+                      onTap: _searchDestination,
                     ),
                   ],
                 ),
               ),
             ),
-            if (_searched)
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 20),
-                child: Padding(
-                  padding: const EdgeInsets.only(top: 16),
-                  child: _result == null
-                      ? const NoRouteMessage()
-                      : Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      TripStatsRow(result: _result!),
-                      DirectionBanner(result: _result!),
-                      RouteTimeline(result: _result!),
-                    ],
+
+            Obx(
+              () {
+                if (!_searched.value) {
+                  return const SizedBox.shrink();
+                }
+
+                return Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  child: Padding(
+                    padding: const EdgeInsets.only(top: 16),
+                    child: _result.value == null
+                        ? const NoRouteMessage()
+                        : Column(
+                            crossAxisAlignment:
+                                CrossAxisAlignment.stretch,
+                            children: [
+                              TripStatsRow(
+                                result: _result.value!,
+                              ),
+                              DirectionBanner(
+                                result: _result.value!,
+                              ),
+                              RouteTimeline(
+                                result: _result.value!,
+                              ),
+                            ],
+                          ),
                   ),
-                ),
-              ),
+                );
+              },
+            ),
           ],
         ),
       ),
