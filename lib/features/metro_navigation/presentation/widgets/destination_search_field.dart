@@ -37,8 +37,9 @@ class DestinationSearchField extends StatelessWidget {
               tooltip: 'Search',
               onPressed: onTap,
               icon: const Icon(
-                  Icons.search_rounded,
-                  color: AppColors.gold, size: 20
+                Icons.search_rounded,
+                color: AppColors.gold,
+                size: 20,
               ),
             ),
           ),

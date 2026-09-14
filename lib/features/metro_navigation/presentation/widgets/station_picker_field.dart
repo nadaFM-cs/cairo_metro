@@ -17,7 +17,8 @@ class StationPickerField extends StatefulWidget {
     required this.hint,
     required this.allStations,
     required this.onSelected,
-    this.selectedStation, required this.onTap,
+    this.selectedStation,
+    required this.onTap,
   });
 
   @override
@@ -25,8 +26,9 @@ class StationPickerField extends StatefulWidget {
 }
 
 class _StationPickerFieldState extends State<StationPickerField> {
-  late final TextEditingController _controller =
-  TextEditingController(text: widget.selectedStation ?? '');
+  late final TextEditingController _controller = TextEditingController(
+    text: widget.selectedStation ?? '',
+  );
 
   @override
   void didUpdateWidget(covariant StationPickerField oldWidget) {
@@ -60,8 +62,11 @@ class _StationPickerFieldState extends State<StationPickerField> {
           leadingIcon: IconButton(
             onPressed: widget.onTap,
             tooltip: 'Go to Map',
-            icon: const Icon(Icons.location_on_outlined,
-                color: AppColors.gold, size: 20),
+            icon: const Icon(
+              Icons.location_on_outlined,
+              color: AppColors.gold,
+              size: 20,
+            ),
           ),
           textStyle: AppTextStyles.stationName,
           menuStyle: MenuStyle(
@@ -78,7 +83,10 @@ class _StationPickerFieldState extends State<StationPickerField> {
           inputDecorationTheme: InputDecorationTheme(
             filled: true,
             fillColor: AppColors.surfaceAlt,
-            contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 14,
+              vertical: 12,
+            ),
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
               borderSide: const BorderSide(color: AppColors.stroke),
@@ -93,10 +101,10 @@ class _StationPickerFieldState extends State<StationPickerField> {
             ),
           ),
           dropdownMenuEntries: widget.allStations
-              .map((station) => DropdownMenuEntry<String>(
-            value: station,
-            label: station,
-          ))
+              .map(
+                (station) =>
+                    DropdownMenuEntry<String>(value: station, label: station),
+              )
               .toList(),
           onSelected: (value) {
             if (value != null) widget.onSelected(value);

@@ -8,7 +8,7 @@ class Formatters {
     final parts = <String>[];
     if (hours > 0) {
       parts.add('$hours');
-    } else{
+    } else {
       parts.add('0');
     }
     if (hours > 0 || minutes > 0) {
@@ -18,6 +18,7 @@ class Formatters {
 
     return parts.join(' : ');
   }
+
   static String priceEgp(double value) {
     final isWhole = value == value.roundToDouble();
     final text = isWhole ? value.toStringAsFixed(0) : value.toStringAsFixed(2);
