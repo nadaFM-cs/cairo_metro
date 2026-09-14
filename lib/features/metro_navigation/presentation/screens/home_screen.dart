@@ -1,13 +1,16 @@
 import 'package:flutter/material.dart';
-import 'package:get/get_rx/src/rx_types/rx_types.dart';
-import 'package:get/get_state_manager/src/rx_flutter/rx_obx_widget.dart';
+import 'package:get/get.dart';
+import 'package:url_launcher/url_launcher.dart';
+import '../../domain/services/destination_search_service.dart';
 import 'package:metro_ui/features/metro_navigation/domain/entities/trip_result.dart';
 import 'package:metro_ui/features/metro_navigation/domain/services/metro_network.dart';
 import 'package:metro_ui/features/metro_navigation/domain/services/trip_planner.dart';
 import 'package:metro_ui/features/metro_navigation/presentation/widgets/destination_search_field.dart';
 import 'package:metro_ui/features/metro_navigation/presentation/widgets/nearest_station_locator.dart';
+
 import '../../../../core/theme/app_colors.dart';
 import '../../domain/entities/metro_line_id.dart';
+import '../../domain/services/nearest_station_service.dart';
 import '../utils/station_directory.dart';
 import '../widgets/direction_banner.dart';
 import '../widgets/metro_app_header.dart';
@@ -24,6 +27,7 @@ class HomeScreen extends StatefulWidget {
 
   const HomeScreen({super.key, required this.network, required this.planner});
 
+
   @override
   State<HomeScreen> createState() => _HomeScreenState();
 }
@@ -33,7 +37,15 @@ class _HomeScreenState extends State<HomeScreen> {
   final _end = RxnString();
   final Rx<TripResult?> _result = Rx<TripResult?>(null);
   final _searched = false.obs;
+  late final TextEditingController _destinationController;
+  final DestinationSearchService _destinationSearchService =
+  DestinationSearchService();
 
+  @override
+  void initState() {
+    super.initState();
+    _destinationController = TextEditingController();
+  }
   void _swap() {
     final tmp = _start.value;
     _start.value = _end.value;
@@ -47,6 +59,58 @@ class _HomeScreenState extends State<HomeScreen> {
     _result.value = widget.planner.plan(_start.value!, _end.value!);
   }
 
+  Future<void> _searchDestination() async {
+    final query = _destinationController.text.trim();
+
+    if (query.isEmpty) {
+      Get.snackbar(
+        'Empty',
+        'Please enter a destination name',
+      );
+      return;
+    }
+
+    try {
+      final location = await _destinationSearchService.searchDestination(query);
+
+      if (location == null) {
+        Get.snackbar(
+          'Not found',
+          'We could not find this destination.',
+        );
+        return;
+      }
+
+      final nearestStation = NearestStationService().findNearestStation(
+        latitude: location.latitude,
+        longitude: location.longitude,
+      );
+
+      _end.value = nearestStation.name;
+
+      Get.snackbar(
+        'Nearest station',
+        '${nearestStation.name} is the nearest station.',
+      );
+
+      final googleMapsUrl = Uri.parse(
+        'https://www.google.com/maps/search/?api=1'
+            '&query=${Uri.encodeComponent('${nearestStation.name} Cairo Metro Station')}',
+      );
+
+      if (await canLaunchUrl(googleMapsUrl)) {
+        await launchUrl(
+          googleMapsUrl,
+          mode: LaunchMode.externalApplication,
+        );
+      }
+    } catch (e) {
+      Get.snackbar(
+        'Search Failed',
+        'Could not find this destination. Try a more specific name.',
+      );
+    }
+  }
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -143,10 +207,12 @@ class _HomeScreenState extends State<HomeScreen> {
                 child: Column(
                   children: [
                     DestinationSearchField(
-                      onTap: () {
-                        //Aya Hany/////////////////////////////////////////////////////////////////////////////////////////////////////
+                      controller: _destinationController,
+                      onSubmitted: (_) {
+                        _searchDestination();
                       },
-                    )
+                      onTap: _searchDestination,
+                    ),
                   ],
                 ),
               ),
@@ -174,5 +240,6 @@ class _HomeScreenState extends State<HomeScreen> {
         ),
       ),
     );
+
   }
 }
