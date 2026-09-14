@@ -1,26 +1,18 @@
-#
-# Generated file, do not edit.
-#
+//
+//  Generated file. Do not edit.
+//
 
-list(APPEND FLUTTER_PLUGIN_LIST
-  geolocator_windows
-  url_launcher_windows
-)
+// clang-format off
 
-list(APPEND FLUTTER_FFI_PLUGIN_LIST
-  jni
-)
+#include "generated_plugin_registrant.h"
 
-set(PLUGIN_BUNDLED_LIBRARIES)
+#include <geolocator_windows/geolocator_windows.h>
+#include <url_launcher_windows/url_launcher_windows.h>
 
-foreach(plugin ${FLUTTER_PLUGIN_LIST})
-  add_subdirectory(flutter/ephemeral/.plugin_symlinks/${plugin}/windows plugins/${plugin})
-  target_link_libraries(${BINARY_NAME} PRIVATE ${plugin}_plugin)
-  list(APPEND PLUGIN_BUNDLED_LIBRARIES $<TARGET_FILE:${plugin}_plugin>)
-  list(APPEND PLUGIN_BUNDLED_LIBRARIES ${${plugin}_bundled_libraries})
-endforeach(plugin)
+void RegisterPlugins(flutter::PluginRegistry* registry) {
+  GeolocatorWindowsRegisterWithRegistrar(
+      registry->GetRegistrarForPlugin("GeolocatorWindows"));
 
-foreach(ffi_plugin ${FLUTTER_FFI_PLUGIN_LIST})
-  add_subdirectory(flutter/ephemeral/.plugin_symlinks/${ffi_plugin}/windows plugins/${ffi_plugin})
-  list(APPEND PLUGIN_BUNDLED_LIBRARIES ${${ffi_plugin}_bundled_libraries})
-endforeach(ffi_plugin)
+  UrlLauncherWindowsRegisterWithRegistrar(
+      registry->GetRegistrarForPlugin("UrlLauncherWindows"));
+}

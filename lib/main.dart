@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 import 'package:metro_ui/features/metro_navigation/domain/services/metro_network.dart';
 import 'package:metro_ui/features/metro_navigation/domain/services/trip_planner.dart';
 import 'package:metro_ui/features/metro_navigation/presentation/screens/home_screen.dart';
