@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 import 'package:metro_ui/features/metro_navigation/domain/entities/trip_result.dart';
 import 'package:metro_ui/features/metro_navigation/domain/services/metro_network.dart';
 import 'package:metro_ui/features/metro_navigation/domain/services/trip_planner.dart';
-import 'package:metro_ui/features/metro_navigation/presentation/screens/station_map.dart';
+import 'package:metro_ui/features/metro_navigation/domain/services/station_map.dart';
 import 'package:metro_ui/features/metro_navigation/presentation/widgets/destination_search_field.dart';
 import 'package:metro_ui/features/metro_navigation/presentation/widgets/nearest_station_locator.dart';
 import '../../../../core/theme/app_colors.dart';
@@ -58,7 +59,7 @@ class _HomeScreenState extends State<HomeScreen> {
             onPressed: () => Navigator.of(context).push(
               MaterialPageRoute(builder: (_) => const AllStationsScreen()),
             ),
-          )
+          ),
         ],
       ),
       body: SafeArea(
@@ -66,7 +67,11 @@ class _HomeScreenState extends State<HomeScreen> {
           padding: const EdgeInsets.only(bottom: 30),
           children: [
             MetroAppHeader(
-              lines: const [MetroLineId.line1, MetroLineId.line2, MetroLineId.line3],
+              lines: const [
+                MetroLineId.line1,
+                MetroLineId.line2,
+                MetroLineId.line3,
+              ],
             ),
             const SizedBox(height: 10),
             Padding(
@@ -82,36 +87,55 @@ class _HomeScreenState extends State<HomeScreen> {
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     NearestStationLocator(
-                        onTap: (){
-                          //Radwa Elsayed///////////////////////////////////////////////////////////////////////////////////////////////
-                        }
-                    ),
-                    SizedBox(height: 15,),
-                    StationPickerField(
-                      onTap: (){
-                        //Nada Yahia/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+                      onTap: () {
+                        //Radwa Elsayed///////////////////////////////////////////////////////////////////////////////////////////////
                       },
+                    ),
+                    SizedBox(height: 15),
+                    StationPickerField(
+                      onTap: () {
+                        if (_start.value != null ) {
+                          openStationMap(_start.value!);
+                        } else {
+                          Get.snackbar(
+                            'Choose Station',
+                            'Please choose a start station first',
+                          );
+                        }
+                      },
+                        //Nada Yahia/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+                      
                       label: 'From station',
                       hint: 'Choose a start station',
                       allStations: StationDirectory.all,
-                      selectedStation: _start,
-                      onSelected: (s) => setState(() => _start = s),
+                      selectedStation: _start.value,
+                      onSelected: (s) => setState(() => _start.value = s),
                     ),
-                    SizedBox(height: 15,),
+                    SizedBox(height: 15),
                     SwapStationsButton(onPressed: _swap),
                     StationPickerField(
-                      onTap: (){
+                      onTap: () {
+                        if (_end != null && _end.value!=null)
+                          openStationMap(_end.value!);
+                        else {
+                          Get.snackbar(
+                            'Choose Station',
+                            'Please choose a end station first',
+                          );
+                        }
                         //Nada Yahia/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
                       },
                       label: 'To station',
                       hint: 'Choose a destination station',
                       allStations: StationDirectory.all,
-                      selectedStation: _end,
-                      onSelected: (s) => setState(() => _end = s),
+                      selectedStation: _end.value,
+                      onSelected: (s) => setState(() => _end.value = s),
                     ),
                     const SizedBox(height: 14),
                     ElevatedButton.icon(
-                      onPressed: (_start != null && _end != null) ? _calculate : null,
+                      onPressed: (_start.value != null )
+                          ? _calculate
+                          : null,
                       icon: const Icon(Icons.tram_rounded, size: 18),
                       label: const Text('Calculate trip'),
                     ),
@@ -140,7 +164,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
               ),
             ),
-            if (_searched)
+            if (_searched.value)
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 20),
                 child: Padding(
@@ -148,13 +172,13 @@ class _HomeScreenState extends State<HomeScreen> {
                   child: _result == null
                       ? const NoRouteMessage()
                       : Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      TripStatsRow(result: _result!),
-                      DirectionBanner(result: _result!),
-                      RouteTimeline(result: _result!),
-                    ],
-                  ),
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            TripStatsRow(result: _result.value!),
+                            DirectionBanner(result: _result.value!),
+                            RouteTimeline(result: _result.value!),
+                          ],
+                        ),
                 ),
               ),
           ],
